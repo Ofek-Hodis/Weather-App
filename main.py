@@ -10,6 +10,7 @@ class Home(QWidget):
         super().__init__()
         self.settings()
         self.initUI()
+        self.search_button.clicked.connect(self.search_click)  # Indicating what function to run when button is pressed
 
     def settings(self):  # A method to define basic visual settings
         self.setWindowTitle("Weather-Search")
@@ -32,23 +33,28 @@ class Home(QWidget):
         self.setLayout(self.desgin)  # Setting the layout to be based on the main design setting
 
     def search_click(self):
-        pass
+        self.results = self.search_weather(self.input_box.text())
+        self.output.setText(self.results)
 
     def search_weather(self, city):
         weather_data = get_weather(city)
         if weather_data.status_code == 200:
-            weather_description = weather_data.json()['weather'][0]['main']
-            temp = weather_data.json()['main']['temp']
-            humidity = weather_data.json()['main']['humidity']
-            wind_speed = weather_data.json()['wind']['speed']
-
             time_zone = weather_data.json()['timezone']  # The offset from UTC (Coordinated universal time) in seconds
             utc_now = datetime.now(timezone.utc)  # saving the current hour in UTC (Coordinated universal time)
             local_time = utc_now + timedelta(seconds=time_zone)
-            local_hour = str(local_time.time())[:8]
+            local_hour = str(local_time.time())[:5]
 
-        elif weather_data.status_code == 404:
-            pass
+            info = (f"{city.capitalize()}:\n"
+                    f"{weather_data.json()['weather'][0]['main']}\n"
+                    f"{weather_data.json()['main']['temp']} degrees Celsius\n"
+                    f"Local time: {local_hour}\n"
+                    f"Humidity: {weather_data.json()['main']['humidity']}%\n"
+                    f"Wind speed: {weather_data.json()['wind']['speed']} kmph\n"
+            )
+
+            return info
+        else:
+            return f"Error: {weather_data.json()['message']}"
 
 if __name__ == "__main__":
     app = QApplication([])
