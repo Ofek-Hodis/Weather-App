@@ -2,6 +2,8 @@ import sys
 from weather import get_weather
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QPushButton, QVBoxLayout, QLineEdit
 from datetime import datetime, timezone, timedelta
+from PyQt6.QtCore import Qt  # Imported to help with text alignement
+from PyQt6.QtGui import QFont  # Imported for font styling
 
 
 class Home(QWidget):
@@ -24,13 +26,44 @@ class Home(QWidget):
         self.output = QLabel("Weather PLACEHOLDER")
         self.search_button = QPushButton("Search")
 
-        self.desgin = QVBoxLayout()  # This will be the main desgin setting
-        self.desgin.addWidget(self.title)
+        self.desgin = QVBoxLayout()  # This will be the main design setting
+        self.desgin.addWidget(self.title, alignment=Qt.AlignmentFlag.AlignCenter)
         self.desgin.addWidget(self.input_box)
         self.desgin.addWidget(self.output)
         self.desgin.addWidget(self.search_button)
 
         self.setLayout(self.desgin)  # Setting the layout to be based on the main design setting
+
+        self.setStyleSheet("""
+            QWidget {
+            background-color: #ecf0d4;
+            }
+
+            QLabel {
+            color: #3498db;
+            }
+
+            QLineEdit {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            border: 1px solid #bdc3c7;
+            padding: 5px;
+            }
+
+            QLabel#output {
+            color: #2c3e50;
+            }
+
+            QPushButton {
+            background-color: #3498db;
+            color: #ffffff;
+            border: 1px solid #2980b9;
+            padding: 10px;
+            font-size: 28px;
+            font-weight: bold;
+            border-radius: 5px;
+            }
+        """)
 
     def search_click(self):
         self.results = self.search_weather(self.input_box.text())
