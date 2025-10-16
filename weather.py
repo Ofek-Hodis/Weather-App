@@ -10,7 +10,7 @@ def get_weather(city):
     env_path = Path(__file__).resolve().parent / "API_key.env"
     load_dotenv(dotenv_path=env_path)
 
-    api_key = os.getenv("api_key")
+    api_key = os.getenv("API_KEY")
     #  Opening the url of the relevant city using the input and the API key
     weather_data = requests.get(
         f"https://api.openweathermap.org/data/2.5/weather?q={city}&units=metric&APPID={api_key}")
