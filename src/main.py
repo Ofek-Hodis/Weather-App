@@ -124,20 +124,39 @@ class Home(QWidget):
         self.add_box.setPlaceholderText("Add to favorites...")  # Text that will be displayed before searching
         self.add_button = QPushButton("Add")
         self.action_description = QLabel("")
+        self.info1 = QLabel("")
+        self.info2 = QLabel("")
+        self.info3 = QLabel("")
 
         favorites_layout = QVBoxLayout()  # This will be the main design setting
         favorites_layout.addWidget(self.fav_title, alignment=Qt.AlignmentFlag.AlignCenter)
         favorites_layout.addWidget(self.add_box)
         favorites_layout.addWidget(self.action_description)
         favorites_layout.addWidget(self.add_button)
+        favorites_layout.addWidget(self.info1)
+        favorites_layout.addWidget(self.info2)
+        favorites_layout.addWidget(self.info3)
 
         self.favorites_tab.setLayout(favorites_layout)
+        self.update_favs()
 
         # self.setStyleSheet("""""")
 
     def add_click(self):
         results = self.add_favs(self.add_box.text())
         self.action_description.setText(results)
+        self.update_favs()
+
+    def update_favs(self):
+        with open("Data/favorites.JSON", "r") as f:
+            data = json.load(f)
+        info1 = self.search_weather(data[0])
+        info2 = self.search_weather(data[1])
+        info3 = self.search_weather(data[2])
+
+        self.info1.setText(info1)
+        self.info2.setText(info2)
+        self.info3.setText(info3)
 
     def add_favs(self, city):
         weather_data = get_weather(city)
@@ -161,12 +180,6 @@ class Home(QWidget):
                     return f"{city.capitalize} has been added to favorites"
                 else:
                     return "Favorites full, please remove a city."
-
-
-
-            # Add info to JSON file
-            # return the information? Better to create it based on JSON file on different function
-            pass
         else:
             return f"Error: {weather_data.json()['message']}"
 
