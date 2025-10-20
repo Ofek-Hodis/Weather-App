@@ -7,7 +7,7 @@ from pathlib import Path
 
 def get_weather(city):
     # Loading the variables from the .env file by saving the path and giving it to the function load_dotenv()
-    env_path = Path(__file__).resolve().parent / "API_key.env"
+    env_path = Path(__file__).resolve().parent.parent / "API_key.env"
     load_dotenv(dotenv_path=env_path)
 
     api_key = os.getenv("API_KEY")

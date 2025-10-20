@@ -1,4 +1,5 @@
 import sys
+import json
 
 from PyQt6.QtWidgets import QTabWidget
 
@@ -31,6 +32,10 @@ class Home(QWidget):
         self.init_favorites_UI()
         self.search_button.clicked.connect(self.search_click)  # Indicating what function to run when button is pressed
         self.input_box.returnPressed.connect(self.search_click)  # Also runs when pressing enter
+
+        self.add_button.clicked.connect(self.add_click)
+        self.add_box.returnPressed.connect(self.add_click)  # Also runs when pressing enter
+
 
     def settings(self):  # A method to define basic visual settings
         self.setWindowTitle("Weather-Search")
@@ -114,11 +119,60 @@ class Home(QWidget):
         ''')
 
     def init_favorites_UI(self):
-        pass
+        self.fav_title = QLabel("Favorite Cities")
+        self.add_box = QLineEdit()
+        self.add_box.setPlaceholderText("Add to favorites...")  # Text that will be displayed before searching
+        self.add_button = QPushButton("Add")
+        self.action_description = QLabel("")
+
+        favorites_layout = QVBoxLayout()  # This will be the main design setting
+        favorites_layout.addWidget(self.fav_title, alignment=Qt.AlignmentFlag.AlignCenter)
+        favorites_layout.addWidget(self.add_box)
+        favorites_layout.addWidget(self.action_description)
+        favorites_layout.addWidget(self.add_button)
+
+        self.favorites_tab.setLayout(favorites_layout)
+
+        # self.setStyleSheet("""""")
+
+    def add_click(self):
+        results = self.add_favs(self.add_box.text())
+        self.action_description.setText(results)
+
+    def add_favs(self, city):
+        weather_data = get_weather(city)
+        if weather_data.status_code == 200:  # Verifying the city exists
+            with open("Data/favorites.JSON", "r+") as f:
+                data = json.load(f)
+                place = -1  # Starting value for a variable to track first available space
+                is_changed = False
+                quantity = data[len(data) - 1]  # Last cell stores the current number of favorited cities
+                if quantity < 3:  # Verifying the favorites cities quantity is below the limit
+                    for i in range(0, len(data) - 1):  # Last cell in json list is the length of the list, avoiding it
+                        if data[i] == city:
+                            return "City is already in favorites."
+                        if data[i] == "" and not is_changed:
+                            place = i
+                            is_changed = True
+                    data[place] = city
+                    data[len(data) - 1] = quantity + 1
+                    with open("Data/favorites.JSON", "w") as f:
+                        json.dump(data, f)
+                    return f"{city.capitalize} has been added to favorites"
+                else:
+                    return "Favorites full, please remove a city."
+
+
+
+            # Add info to JSON file
+            # return the information? Better to create it based on JSON file on different function
+            pass
+        else:
+            return f"Error: {weather_data.json()['message']}"
 
     def search_click(self):
-        self.results = self.search_weather(self.input_box.text())
-        self.output.setText(self.results)
+        results = self.search_weather(self.input_box.text())
+        self.output.setText(results)
 
     def search_weather(self, city):
         weather_data = get_weather(city)
