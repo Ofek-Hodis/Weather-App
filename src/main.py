@@ -166,6 +166,13 @@ class Home(QWidget):
                 if data[2] != "":
                     info3 = self.search_weather(data[2])
                     self.info3.setText(info3)
+                else:
+                    self.info3.setText("")
+            else:
+                self.info2.setText("")
+        else:
+            self.info1.setText("")
+
 
     def add_favs(self, city):
         weather_data = get_weather(city)
@@ -211,7 +218,19 @@ class Home(QWidget):
     def delete_city(self, city):
         with open("Data/favorites.JSON", "r+") as f:
             data = json.load(f)
-        # Delete relevant and rearrange city and update length
+            data = ["" if x == city else x for x in data]  # Changing the cell of the deleted city to be empty
+            data[-1] = data[-1] - 1  # Updating the cell that holds the length
+        for i in range(0, len(data)-2):  # Shuffling through the list to place the empty cells at the end
+            if data[i] == "":
+                next_cell = data[i + 1]
+                data[i] = next_cell
+                data[i + 1] = ""
+
+        with open("Data/favorites.JSON", "w") as f:  # Removing previous list and dumping updated version
+           json.dump(data, f)
+        self.action_description.setText(f"{city.capitalize()} has been removed from favorites")
+        self.update_favs()  # Updating the favorites display
+
     def search_weather(self, city):
         weather_data = get_weather(city)
         if weather_data.status_code == 200:
