@@ -1,10 +1,10 @@
 import sys
 import json
 
-from PyQt6.QtWidgets import QTabWidget
+from PyQt6.QtWidgets import QTabWidget, QHBoxLayout
 
 from weather import get_weather
-from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QPushButton, QVBoxLayout, QLineEdit
+from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QLineEdit, QInputDialog
 from datetime import datetime, timezone, timedelta
 from PyQt6.QtCore import Qt  # Imported to help with text alignment
 from PyQt6.QtGui import QFont  # Imported for font styling
@@ -35,6 +35,7 @@ class Home(QWidget):
 
         self.add_button.clicked.connect(self.add_click)
         self.add_box.returnPressed.connect(self.add_click)  # Also runs when pressing enter
+        self.delete_button.clicked.connect(self.delete_click)
 
 
     def settings(self):  # A method to define basic visual settings
@@ -123,6 +124,7 @@ class Home(QWidget):
         self.add_box = QLineEdit()
         self.add_box.setPlaceholderText("Add to favorites...")  # Text that will be displayed before searching
         self.add_button = QPushButton("Add")
+        self.delete_button = QPushButton("Delete")
         self.action_description = QLabel("")
         self.info1 = QLabel("")
         self.info2 = QLabel("")
@@ -133,9 +135,13 @@ class Home(QWidget):
         favorites_layout.addWidget(self.add_box)
         favorites_layout.addWidget(self.action_description)
         favorites_layout.addWidget(self.add_button)
-        favorites_layout.addWidget(self.info1)
-        favorites_layout.addWidget(self.info2)
-        favorites_layout.addWidget(self.info3)
+        favorites_layout.addWidget(self.delete_button)
+
+        info_row = QHBoxLayout()  # Lining up information in a row
+        info_row.addWidget(self.info1)
+        info_row.addWidget(self.info2)
+        info_row.addWidget(self.info3)
+        favorites_layout.addLayout(info_row)  # Adding the row to the layout
 
         self.favorites_tab.setLayout(favorites_layout)
         self.update_favs()
@@ -150,13 +156,16 @@ class Home(QWidget):
     def update_favs(self):
         with open("Data/favorites.JSON", "r") as f:
             data = json.load(f)
-        info1 = self.search_weather(data[0])
-        info2 = self.search_weather(data[1])
-        info3 = self.search_weather(data[2])
 
-        self.info1.setText(info1)
-        self.info2.setText(info2)
-        self.info3.setText(info3)
+        if data[0] != "":
+            info1 = self.search_weather(data[0])
+            self.info1.setText(info1)
+            if data[1] != "":
+                info2 = self.search_weather(data[1])
+                self.info2.setText(info2)
+                if data[2] != "":
+                    info3 = self.search_weather(data[2])
+                    self.info3.setText(info3)
 
     def add_favs(self, city):
         weather_data = get_weather(city)
@@ -177,7 +186,7 @@ class Home(QWidget):
                     data[len(data) - 1] = quantity + 1
                     with open("Data/favorites.JSON", "w") as f:
                         json.dump(data, f)
-                    return f"{city.capitalize} has been added to favorites"
+                    return f"{city.capitalize()} has been added to favorites"
                 else:
                     return "Favorites full, please remove a city."
         else:
@@ -187,6 +196,22 @@ class Home(QWidget):
         results = self.search_weather(self.input_box.text())
         self.output.setText(results)
 
+    def delete_click(self):
+        with open("Data/favorites.JSON", "r") as f:
+            data = json.load(f)
+            fav_quantity = data.pop()  # Removing the last cell, used to keep list length
+            if fav_quantity == 0:
+                return
+            data = [x for x in data if x != ""]  # Removing empty cells from the list
+            # 0 indicates index of default choice, False indicates that user can't type in answer
+            item, ok = QInputDialog.getItem(self, "Remove city", "Choose a city:", data, 0, False)
+            if ok and item:
+                self.delete_city(item)
+
+    def delete_city(self, city):
+        with open("Data/favorites.JSON", "r+") as f:
+            data = json.load(f)
+        # Delete relevant and rearrange city and update length
     def search_weather(self, city):
         weather_data = get_weather(city)
         if weather_data.status_code == 200:
