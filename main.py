@@ -3,7 +3,7 @@ import json
 
 from PyQt6.QtWidgets import QTabWidget, QHBoxLayout
 
-from weather import get_weather
+from src.weather import get_weather
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QLineEdit, QInputDialog
 from datetime import datetime, timezone, timedelta
 from PyQt6.QtCore import Qt  # Imported to help with text alignment
@@ -158,13 +158,13 @@ class Home(QWidget):
             data = json.load(f)
 
         if data[0] != "":
-            info1 = self.search_weather(data[0])
+            info1 = self.search_weather(data[0], False)
             self.info1.setText(info1)
             if data[1] != "":
-                info2 = self.search_weather(data[1])
+                info2 = self.search_weather(data[1], False)
                 self.info2.setText(info2)
                 if data[2] != "":
-                    info3 = self.search_weather(data[2])
+                    info3 = self.search_weather(data[2], False)
                     self.info3.setText(info3)
                 else:
                     self.info3.setText("")
@@ -231,21 +231,28 @@ class Home(QWidget):
         self.action_description.setText(f"{city.capitalize()} has been removed from favorites")
         self.update_favs()  # Updating the favorites display
 
-    def search_weather(self, city):
+    def search_weather(self, city, include_location = True):
         weather_data = get_weather(city)
         if weather_data.status_code == 200:
             time_zone = weather_data.json()['timezone']  # The offset from UTC (Coordinated universal time) in seconds
             utc_now = datetime.now(timezone.utc)  # saving the current hour in UTC (Coordinated universal time)
             local_time = utc_now + timedelta(seconds=time_zone)
             local_hour = str(local_time.time())[:5]
-
-            info = (f"{city.capitalize()}:\n"
-                    f"{weather_data.json()['weather'][0]['main']}\n"
-                    f"{weather_data.json()['main']['temp']} degrees Celsius\n"
-                    f"Local time: {local_hour}\n"
-                    f"Humidity: {weather_data.json()['main']['humidity']}%\n"
-                    f"Wind speed: {weather_data.json()['wind']['speed']} kmph\n"
-            )
+            if include_location:
+                info = (f"{city.capitalize()}:\n"
+                        f"{weather_data.json()['weather'][0]['main']}\n"
+                        f"{weather_data.json()['main']['temp']} degrees Celsius\n"
+                        f"Local time: {local_hour}\n"
+                        f"Humidity: {weather_data.json()['main']['humidity']}%\n"
+                        f"Wind speed: {weather_data.json()['wind']['speed']} kmph\n"
+                )
+            else:
+                info = (f"{city.capitalize()}:\n"
+                        f"{weather_data.json()['weather'][0]['main']}\n"
+                        f"{weather_data.json()['main']['temp']} degrees Celsius\n"
+                        f"Humidity: {weather_data.json()['main']['humidity']}%\n"
+                        f"Wind speed: {weather_data.json()['wind']['speed']} kmph\n"
+                        )
 
             return info
         else:
